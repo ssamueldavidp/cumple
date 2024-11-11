@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tarjeta de Cumpleaños</title>
+    <style>
+        /* Estilos generales */
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            flex-direction: column;
+        }
+
+        /* Estilos del sobre */
+        .envelope {
+            width: 300px;
+            height: 200px;
+            position: relative;
+            background: #ff6b6b;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            overflow: hidden;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Líneas diagonales simulando borde de sobre */
+        .envelope::before,
+        .envelope::after {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #cccccc,
+                #cccccc 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            z-index: 1;
+        }
+
+        .envelope::before {
+            top: 0;
+            left: 0;
+            clip-path: polygon(0 0, 100% 0, 100% 60%, 0% 60%);
+        }
+
+        .envelope::after {
+            top: 0;
+            left: 0;
+            clip-path: polygon(0 60%, 100% 60%, 100% 100%, 0% 100%);
+        }
+
+        /* Carta oculta inicialmente dentro del sobre */
+        .message {
+            display: none;
+            width: 280px;
+            height: 180px;
+            position: absolute;
+            top: 20px; /* Ajuste para que aparezca encima */
+            left: 10px;
+            padding: 20px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            font-size: 18px;
+            color: #333;
+            z-index: 3; /* Para asegurarse de que esté encima del sobre */
+        }
+
+        /* Indicador de clic fuera del sobre */
+        .click-hint {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #ff6b6b;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
+            border-radius: 5px;
+            animation: bounce 1s infinite;
+            text-align: center;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-5px);
+            }
+            60% {
+                transform: translateY(-3px);
+            }
+        }
+
+        /* Estilos del confeti */
+        .confetti {
+            position: absolute;
+            top: -10px;
+            width: 10px;
+            height: 10px;
+            background-color: #ffeb3b;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-100px) rotate(0deg); }
+            100% { transform: translateY(600px) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="envelope" onclick="openEnvelope()">
+    <div class="message" id="message">
+        🎉 ¡Feliz Cumpleaños James! 🎉<br> James, eres de bendición para nuestras vidas 🎂
+        <br> Que Dios cada día te llene de más sabiduría, eres un árbol plantado a la orilla de un río que siempre da fruto. 
+        <br> 
+    </div>
+</div>
+
+<div class="click-hint" id="clickHint">¡Haz clic para abrir!</div>
+
+<!-- Video de YouTube embed para audio sin mostrar el video -->
+<div id="player" style="display: none;"></div> <!-- Ocultamos el reproductor de video -->
+
+<script>
+    let isFlapOpen = false;
+
+    // Crear y cargar el reproductor de YouTube (solo audio)
+    function onYouTubeIframeAPIReady() {
+        new YT.Player('player', {
+            videoId: 'https://www.youtube.com/watch?v=40AJMQob25o', // Reemplaza 'tu_id_de_video' con el ID de tu video de YouTube
+            playerVars: {
+                'autoplay': 1, // Reproducir automáticamente el audio
+                'controls': 0, // Ocultar los controles del reproductor
+                'modestbranding': 1, // No mostrar el logo de YouTube
+                'rel': 0, // Evitar que aparezcan videos relacionados al final
+                'showinfo': 0, // No mostrar la información del video
+                'mute': 0, // No silenciar el video (puedes cambiarlo a 1 si quieres que se reproduzca sin sonido)
+                'loop': 1, // Hacer que el video se repita
+                'playlist': 'https://www.youtube.com/watch?v=40AJMQob25o' // Hacer que el video se repita
+            },
+            events: {
+                onReady: function(event) {
+                    // No mostrar el reproductor, solo reproducir el audio
+                    event.target.setVolume(100); // Asegurar que el volumen esté al máximo
+                }
+            }
+        });
+    }
+
+    // Función para abrir el sobre y reproducir la música
+    function openEnvelope() {
+        if (!isFlapOpen) {
+            // Mostrar la carta y reproducir música y confeti
+            document.getElementById('message').style.display = 'block';
+            document.getElementById('clickHint').style.display = 'none'; // Ocultar el texto de "Haz clic"
+            playMusic();
+            releaseConfetti();
+        } else {
+            // Volver a ocultar la carta
+            document.getElementById('message').style.display = 'none';
+            document.getElementById('clickHint').style.display = 'block'; // Mostrar nuevamente el texto
+        }
+
+        // Cambiar el estado de la carta
+        isFlapOpen = !isFlapOpen;
+    }
+
+    // Reproducir música desde el video de YouTube (solo audio)
+    function playMusic() {
+        const player = YT.get('player');
+        player.playVideo();
+    }
+
+    // Función para liberar confeti
+    function releaseConfetti() {
+        for (let i = 0; i < 100; i++) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            confetti.style.left = `${Math.random() * window.innerWidth}px`;
+            confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+            document.body.appendChild(confetti);
+        }
+    }
+
+    // Cargar la API de YouTube
+    const script = document.createElement('script');
+    script.src = 'https://www.youtube.com/iframe_api';
+    document.body.appendChild(script);
+
+</script>
+
+</body>
+</html>
+
